@@ -8,14 +8,19 @@ function tone(freq,duration=.1){if(!sound)return;try{audio ||= new (window.Audio
 function screens(){for(const id of ['home','paused','result'])$(id).hidden=state!==id;$('pause').hidden=!['playing','paused'].includes(state);$('hint').textContent=state==='playing'?'← SLIDE TO SAVE →':'YOUR GLOVE. YOUR GLORY.';}
 function updateHUD(){$('score').textContent=String(game.score).padStart(2,'0');$('best').textContent=String(best).padStart(2,'0');$('time').innerHTML=game.practice?'∞':`${Math.ceil(game.time)}<span>s</span>`;$('modeLabel').textContent=game.practice?'NO-PRESSURE WARM-UP':'60 SECOND SHOWDOWN';$('streak').textContent=state==='playing'?`${game.multiplier}× POINTS  ·  ${game.streak} IN A ROW`:'';}
 function start(practice=false){game.reset(practice);particles=[];state='playing';$('toast').textContent='';screens();updateHUD();tone(540);}
-function pause(){if(state==='playing'){state='paused';screens();}}function resume(){if(state==='paused'){state='playing';last=performance.now();screens();}}
+function pause(){if(state==='playing'){state='paused';$('toast').textContent='';screens();}}function resume(){if(state==='paused'){state='playing';last=performance.now();screens();}}
 function finish(){state='result';$('toast').textContent='';const record=game.score>best;if(record){best=game.score;persist('gg-best',best);}$('verdict').textContent=record?'NEW PERSONAL BEST':'FULL TIME';$('resultTitle').innerHTML=game.score>=80?'ABSOLUTE<br>WALL.':game.score>=30?'SAFE<br>HANDS.':'BEAUTIFUL<br>CHAOS.';$('finalScore').textContent=game.score;$('resultStats').textContent=`${game.saves} saves · ${game.stars} stars · ${game.boots} boots caught`;screens();tone(740,.25);}
 $('play').onclick=()=>start();$('practice').onclick=()=>start(true);$('again').onclick=()=>start();$('pause').onclick=()=>state==='paused'?resume():pause();$('resume').onclick=resume;
 function home(){state='home';game.reset();particles=[];$('toast').textContent='';screens();updateHUD();}$('quit').onclick=home;$('homeButton').onclick=home;
 $('sound').onclick=()=>{sound=!sound;persist('gg-sound',sound);soundLabel();tone(640);};$('info').onclick=()=>{pause();$('help').showModal();};$('closeHelp').onclick=()=>$('help').close();$('resetBest').onclick=()=>{best=0;persist('gg-best',0);updateHUD();$('resetBest').textContent='Best score reset';};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('blur',()=>{keys={};pause();});
 function move(e){if(state!=='playing')return;const rect=canvas.getBoundingClientRect();game.player=Math.max(.09,Math.min(.91,(e.clientX-rect.left)/rect.width));}
-canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);move(e);});canvas.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')move(e);});
+let dragging=false;
+canvas.addEventListener('pointerdown',e=>{dragging=true;canvas.setPointerCapture(e.pointerId);move(e);});
+canvas.addEventListener('pointermove',e=>{if(dragging)move(e);});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,()=>dragging=false);
+canvas.addEventListener('touchstart',e=>{e.preventDefault();if(e.touches[0])move(e.touches[0]);},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();if(e.touches[0])move(e.touches[0]);},{passive:false});
 window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' '].includes(e.key)&&!$('help').open){e.preventDefault();keys[e.key]=true;if(e.key===' ')state==='playing'?pause():resume();}});window.addEventListener('keyup',e=>keys[e.key]=false);
 function resize(){const r=canvas.getBoundingClientRect();w=r.width;h=r.height;const d=Math.min(3,window.devicePixelRatio||1);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0);}new ResizeObserver(resize).observe(canvas);
 function circle(x,y,r,fill){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();}
