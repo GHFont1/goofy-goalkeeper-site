@@ -1,10 +1,211 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10251f"><meta name="description" content="Save soccer balls. Dodge flying boots. Become a gloriously goofy goalkeeper."><title>Goofy Goalkeeper</title><link rel="stylesheet" href="style.css"></head>
-<body><main id="app"><header><div class="brand"><span class="badge">GG</span><span>GOOFY<br>GOALKEEPER</span></div><button id="sound" class="icon" aria-label="Turn sound on">♪ OFF</button><button id="pause" class="icon" aria-label="Pause game" hidden>Ⅱ</button></header>
-<section class="scoreboard" aria-label="Scoreboard"><div><small>SCORE</small><strong id="score">00</strong></div><div class="timer"><small id="modeLabel">60 SECOND SHOWDOWN</small><strong id="time">60<span>s</span></strong></div><div><small>BEST</small><strong id="best">00</strong></div></section>
-<section id="arena" aria-label="Soccer pitch. Drag left and right to move your glove."><canvas id="pitch" aria-label="Animated soccer game"></canvas><div id="streak" role="status"></div><div id="toast" aria-live="polite"></div><div id="home" class="overlay"><span class="eyebrow">BIG GLOVE. TINY ATTENTION SPAN.</span><h1>OH,<br>WHAT A<br><em>SAVE.</em></h1><p>Save the balls. Dodge the boots.<br>Try to look professional.</p><button class="primary" id="play">LET’S PLAY <span>↗</span></button><button class="secondary" id="practice">Warm-up · no clock</button><div class="instructions"><span>⚽ CATCH</span><span>🥾 DODGE</span><span>⭐ BONUS</span></div></div>
-<div id="paused" class="overlay card" hidden><span class="eyebrow">HALF-TIME SNACK?</span><h2>TAKE A<br>BREATHER.</h2><p>The pitch will wait.</p><button id="resume" class="primary">BACK IN GOAL ↗</button><button id="quit" class="secondary">Back to clubhouse</button></div>
-<div id="result" class="overlay card" hidden><span class="eyebrow" id="verdict">FULL TIME</span><h2 id="resultTitle">SAFE<br>HANDS.</h2><div class="result-score" id="finalScore">0</div><p id="resultStats"></p><button id="again" class="primary">ONE MORE MATCH ↗</button><button id="homeButton" class="secondary">Back to clubhouse</button></div></section>
-<footer><span id="hint">← SLIDE TO SAVE →</span><button id="info">How to play & privacy</button></footer>
-<dialog id="help"><button id="closeHelp" class="icon close" aria-label="Close help">✕</button><span class="eyebrow">THE UNOFFICIAL RULEBOOK</span><h2>YOU’VE GOT THIS.</h2><p>Drag anywhere on the pitch to move your glove. On a keyboard, use ← and →. Catch soccer balls as they reach the glove line.</p><p>Each save earns 1 point. Every 5 consecutive saves raises your multiplier, up to 4×. Catch a star for 5× your multiplier. Boots steal 3 points and reset your streak. Missed balls reset your streak.</p><p>A match lasts 60 seconds. Warm-up has no timer or saved record. Pause anytime; leaving the app automatically pauses play.</p><h3>Privacy</h3><p>No accounts, ads, analytics, purchases, or tracking. Your best score and sound preference stay on this device. Nothing is sent to us.</p><p>Support: bennyscalzo@greatcallathletics.com</p><button id="resetBest" class="secondary">Reset local best score</button><small>Goofy Goalkeeper · Version 1.0.0</small></dialog>
-</main><script src="engine.js"></script><script src="game.js"></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b1433">
+<meta name="description" content="Goofy Goalkeeper: a floodlit goalkeeping career with dives, curlers, boss penalty takers, shootouts and a daily challenge.">
+<title>Goofy Goalkeeper</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Z" fill="currentColor"/><path d="M7 5H4v1a4 4 0 0 0 4 4M17 5h3v1a4 4 0 0 1-4 4M12 12v4M8 20h8M9 16h6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1" stroke="currentColor" stroke-width="2" fill="none"/><path d="M3 10h18M3 14h18M9 6v12M15 6v12" stroke="currentColor" stroke-width="1" opacity=".5"/><circle cx="17" cy="9" r="2.4" fill="currentColor"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3" stroke="currentColor" stroke-width="2" fill="none"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="15" r="2.5" fill="currentColor"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" fill="currentColor"/></symbol>
+  <symbol id="i-whistle" viewBox="0 0 24 24"><circle cx="9" cy="14" r="5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 10h9v4h-5M4 6l2 2M9 3v3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="i-glove" viewBox="0 0 24 24"><path d="M6 12V6a1.5 1.5 0 0 1 3 0v4V4.5a1.5 1.5 0 0 1 3 0V10V5a1.5 1.5 0 0 1 3 0v6l1.4-2a1.6 1.6 0 0 1 2.6 1.8L16 16a5 5 0 0 1-4 2H11a5 5 0 0 1-5-5v-1Z" fill="currentColor"/><rect x="7" y="19" width="9" height="3" rx="1" fill="currentColor"/></symbol>
+  <symbol id="i-medal" viewBox="0 0 24 24"><path d="M7 2h4l2 6H9L7 2Zm6 0h4l-2 6h-4" fill="currentColor" opacity=".6"/><circle cx="12" cy="15" r="6" fill="currentColor"/><path d="m12 12 1 2h2l-1.6 1.3.6 2.2-2-1.3-2 1.3.6-2.2L9 14h2l1-2Z" fill="#0b1433"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2.4" fill="none"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9L12 2.8Z" fill="currentColor"/></symbol>
+</svg>
+
+<canvas id="scene" aria-label="Stadium and goal. During play, tap where you want the keeper to dive."></canvas>
+
+<main id="ui">
+  <!-- HOME -->
+  <section id="screen-home" class="screen" aria-label="Main menu">
+    <div class="topbar">
+      <button class="level-chip" id="home-level" aria-label="Keeper level and trophies"><span class="lv" id="lv-num">1</span><span class="lv-meta"><b>Keeper level</b><span class="xpbar"><i id="xp-fill"></i></span></span></button>
+      <button class="icon-btn" id="open-settings" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+    </div>
+    <div class="hero">
+      <canvas id="mascot" width="150" height="150" aria-hidden="true"></canvas>
+      <h1 class="logo"><span>Goofy</span><span>Goalkeeper</span></h1>
+      <p class="tag">Big gloves. Bigger glory.</p>
+    </div>
+    <div class="menu">
+      <button class="mode mode-career" id="go-career"><span class="mode-icon"><svg><use href="#i-trophy"/></svg></span><span class="mode-text"><b>Career</b><small id="career-sub">Sunday League · Match 1</small></span><span class="mode-stars" id="career-stars">0 ★</span></button>
+      <div class="mode-grid">
+        <button class="mode" id="go-shootout"><span class="mode-icon"><svg><use href="#i-target"/></svg></span><b>Shootout</b><small>Shoot &amp; save</small></button>
+        <button class="mode" id="go-daily"><span class="mode-icon"><svg><use href="#i-cal"/></svg></span><b>Daily</b><small id="daily-sub">12 shots</small></button>
+        <button class="mode" id="go-survival"><span class="mode-icon"><svg><use href="#i-heart"/></svg></span><b>Survival</b><small id="survival-sub">3 lives</small></button>
+        <button class="mode" id="go-training"><span class="mode-icon"><svg><use href="#i-whistle"/></svg></span><b>Training</b><small id="training-sub">Learn to dive</small></button>
+      </div>
+      <div class="dock">
+        <button id="go-locker"><svg><use href="#i-glove"/></svg><span>Locker</span><i class="dot" id="locker-dot" hidden></i></button>
+        <button id="go-trophies"><svg><use href="#i-medal"/></svg><span>Trophies</span></button>
+        <button id="go-help"><svg><use href="#i-whistle"/></svg><span>How to play</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAREER -->
+  <section id="screen-career" class="screen panel" hidden aria-label="Career">
+    <div class="panel-head"><button class="icon-btn back" aria-label="Back"><svg><use href="#i-back"/></svg></button><h2>Career</h2><span class="pill" id="career-total">0 / 48 ★</span></div>
+    <p class="panel-intro">From muddy Sunday pitches to the Continental Cup. Beat each club, then face the boss penalty taker to lift the trophy.</p>
+    <div id="career-list" class="scroll"></div>
+  </section>
+
+  <!-- SHOOTOUT PICK -->
+  <section id="screen-shootout" class="screen panel" hidden aria-label="Penalty shootout">
+    <div class="panel-head"><button class="icon-btn back" aria-label="Back"><svg><use href="#i-back"/></svg></button><h2>Shootout</h2></div>
+    <p class="panel-intro">Five kicks each, then sudden death. You take your penalties, then go in goal for theirs. Pick an opponent. Win more career matches to unlock tougher teams.</p>
+    <div id="shootout-list" class="scroll"></div>
+  </section>
+
+  <!-- LOCKER -->
+  <section id="screen-locker" class="screen panel" hidden aria-label="Locker room">
+    <div class="panel-head"><button class="icon-btn back" aria-label="Back"><svg><use href="#i-back"/></svg></button><h2>Locker</h2></div>
+    <div class="scroll">
+      <div class="locker-preview"><canvas id="locker-canvas" aria-hidden="true"></canvas><div><b id="locker-glove-name">Rookie Mitts</b><small id="locker-kit-name">Clubhouse Lime</small></div></div>
+      <h3 class="sub">Gloves</h3>
+      <div id="glove-list" class="cards"></div>
+      <h3 class="sub">Kits</h3>
+      <div id="kit-list" class="swatches"></div>
+    </div>
+  </section>
+
+  <!-- TROPHIES -->
+  <section id="screen-trophies" class="screen panel" hidden aria-label="Trophies and stats">
+    <div class="panel-head"><button class="icon-btn back" aria-label="Back"><svg><use href="#i-back"/></svg></button><h2>Trophies</h2></div>
+    <div class="scroll">
+      <div id="cabinet" class="cabinet"></div>
+      <h3 class="sub">Achievements <span id="ach-count" class="muted"></span></h3>
+      <div id="ach-list" class="ach"></div>
+      <h3 class="sub">Career stats</h3>
+      <dl id="stats" class="stats"></dl>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="screen-settings" class="screen panel" hidden aria-label="Settings">
+    <div class="panel-head"><button class="icon-btn back" aria-label="Back"><svg><use href="#i-back"/></svg></button><h2>Settings</h2></div>
+    <div class="scroll">
+      <div class="toggles">
+        <button class="toggle" data-setting="sound" aria-pressed="true"><span><b>Sound effects</b><small>Kicks, saves, whistles</small></span><i></i></button>
+        <button class="toggle" data-setting="crowd" aria-pressed="true"><span><b>Crowd ambience</b><small>The stadium hum</small></span><i></i></button>
+        <button class="toggle" data-setting="haptics" aria-pressed="true"><span><b>Haptics</b><small>Feel every save</small></span><i></i></button>
+        <button class="toggle" data-setting="reducedMotion" aria-pressed="false"><span><b>Reduce motion</b><small>No shake, slow-motion or confetti bursts</small></span><i></i></button>
+        <button class="toggle" data-setting="assist" aria-pressed="false"><span><b>Assist mode</b><small>Slower shots for learning or accessibility</small></span><i></i></button>
+      </div>
+      <button class="row-btn" id="replay-tutorial">Replay training with Coach Pickles</button>
+      <button class="row-btn danger" id="reset-progress">Reset all progress</button>
+      <div class="about">
+        <h3>Privacy</h3>
+        <p>Goofy Goalkeeper works fully offline. No accounts, ads, purchases, analytics or tracking. Your progress and settings are stored only on this device and are never sent anywhere.</p>
+        <p>Support: bennyscalzo@greatcallathletics.com</p>
+        <small id="version-label">Goofy Goalkeeper 2.0</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW TO PLAY -->
+  <section id="screen-help" class="screen panel" hidden aria-label="How to play">
+    <div class="panel-head"><button class="icon-btn back" aria-label="Back"><svg><use href="#i-back"/></svg></button><h2>How to play</h2></div>
+    <div class="scroll help">
+      <h3>Diving</h3><p>Tap anywhere on the goal and your keeper dives there. You get one dive per shot, so pick your moment.</p>
+      <h3>Reading the striker</h3><p>Strikers lean toward their side late in the run-up. Early clubs are honest. Later ones lie. Bosses like Señor Panenka chip it down the middle if you dive before the kick.</p>
+      <h3>Shot types</h3><p><b>Placed</b> shots find the corners. <b>Power</b> shots are too hot to hold, so parry them. <b>Curlers</b> bend late. <b>Knuckleballs</b> wobble. <b>Chips</b> float over early divers. <b>Low drives</b> skim the grass.</p>
+      <h3>Saves and scoring</h3><p>Catch it for 100, parry it for 80, fingertip it for 150. A late reflex save adds 50, a penalty save adds 50. Consecutive saves raise your multiplier up to 3x.</p>
+      <h3>Modes</h3><p><b>Career:</b> 16 matches across four competitions, three stars each. <b>Shootout:</b> take and save penalties. <b>Daily:</b> the same 12 shots all day. <b>Survival:</b> three lives, endless shots. <b>Training:</b> seven lessons with Coach Pickles.</p>
+      <h3>Gear</h3><p>Level up and win trophies to unlock gloves with better reach, grip or spring, plus new kits.</p>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <section id="hud" hidden aria-label="Match">
+    <div class="hud-top">
+      <canvas id="facecam" width="52" height="52" aria-hidden="true"></canvas>
+      <div class="hud-info"><b id="hud-title">Muddy Boots FC</b><small id="hud-sub">Shot 1 of 8</small></div>
+      <div class="hud-score"><b id="hud-score">0</b><small id="hud-mult">x1.0</small></div>
+      <button class="icon-btn" id="pause-btn" aria-label="Pause"><svg><use href="#i-pause"/></svg></button>
+    </div>
+    <div id="hud-pips" class="pips" aria-hidden="true"></div>
+    <div id="coach" class="coach" hidden><span class="coach-name">Coach Pickles</span><p id="coach-text"></p></div>
+    <div id="callout" class="callout" aria-live="polite"></div>
+    <div id="hud-hint" class="hud-hint"></div>
+  </section>
+
+  <!-- PAUSE -->
+  <div id="pause" class="sheet-wrap" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <h2 id="pause-title">Half-time snack?</h2>
+      <p>The pitch will wait for you.</p>
+      <button class="btn primary" id="resume-btn">Back in goal</button>
+      <button class="btn" id="restart-btn">Restart</button>
+      <button class="btn ghost" id="quit-btn">Quit to menu</button>
+    </div>
+  </div>
+
+  <!-- PREMATCH -->
+  <div id="prematch" class="sheet-wrap" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pm-name">
+      <div class="crest big" id="pm-crest"></div>
+      <span class="eyebrow" id="pm-comp">Sunday League · Match 1</span>
+      <h2 id="pm-name">Muddy Boots FC</h2>
+      <p id="pm-blurb" class="quote"></p>
+      <div class="chips" id="pm-chips"></div>
+      <div class="objective" id="pm-objective"></div>
+      <p class="tip" id="pm-tip" hidden></p>
+      <button class="btn primary" id="pm-go">Kick off</button>
+      <button class="btn ghost" id="pm-cancel">Not yet</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result" class="sheet-wrap" hidden>
+    <div class="sheet result" role="dialog" aria-modal="true" aria-labelledby="res-title">
+      <span class="eyebrow" id="res-eyebrow">Full time</span>
+      <h2 id="res-title">Clean sheet!</h2>
+      <div class="stars" id="res-stars"></div>
+      <div class="big-score" id="res-score">0</div>
+      <div class="res-grid" id="res-grid"></div>
+      <div class="xp-line"><span id="res-xp">+0 XP</span><span class="xpbar"><i id="res-xp-fill"></i></span><span id="res-level">LV 1</span></div>
+      <div id="res-unlocks" class="unlocks"></div>
+      <button class="btn primary" id="res-next">Next match</button>
+      <button class="btn" id="res-retry">Play again</button>
+      <button class="btn ghost" id="res-menu">Menu</button>
+    </div>
+  </div>
+
+  <!-- WELCOME / CONFIRM -->
+  <div id="welcome" class="sheet-wrap" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wl-title">
+      <canvas id="welcome-face" width="120" height="120" aria-hidden="true"></canvas>
+      <h2 id="wl-title">Meet Gus.</h2>
+      <p>Gus has enormous gloves and even bigger dreams: from the Sunday League all the way to the Continental Cup. Coach Pickles will show you how to dive in about two minutes.</p>
+      <button class="btn primary" id="wl-train">Start training</button>
+      <button class="btn ghost" id="wl-skip">Skip, I know what I'm doing</button>
+    </div>
+  </div>
+  <div id="confirm" class="sheet-wrap" hidden>
+    <div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cf-title">
+      <h2 id="cf-title">Reset everything?</h2>
+      <p id="cf-text">This clears your career, trophies, unlocks, stats and settings on this device. It cannot be undone.</p>
+      <button class="btn danger" id="cf-yes">Reset progress</button>
+      <button class="btn ghost" id="cf-no">Cancel</button>
+    </div>
+  </div>
+  <div id="banner" class="banner" aria-live="polite" hidden></div>
+</main>
+<script src="core.js"></script>
+<script src="audio.js"></script>
+<script src="render.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
